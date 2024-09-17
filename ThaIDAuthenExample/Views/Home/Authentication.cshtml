@@ -1,0 +1,162 @@
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@model ThaIDAuthenExample.Models.TokenResponse
+@{
+    ViewData["Title"] = "ThaID Request Token";
+}
+
+<div class="text-center">
+    <div id="liveAlertPlaceholder"></div>
+    <h1 class="display-4">Token Result</h1>
+    <br></br>
+    <img alt="ThaID Logo" src="../img/ThaID.png" />
+    <br></br>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Token</h5>
+            <p class="card-text">Token ใช้เพื่อยืนยันตัวตน</p>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Access Token: @Model.AccessToken</li>
+            <li class="list-group-item">Refresk Token: @Model.RefreshToken</li>
+            <li class="list-group-item">Token Type: @Model.TokenType</li>
+            <li class="list-group-item">Expires In: @DateTimeOffset.FromUnixTimeSeconds(Model.ExpiresIn).DateTime.ToLocalTime()</li>
+            <li class="list-group-item">Scope: @Model.Scope</li>
+            <li class="list-group-item">ID Token: @Model.IDToken</li>
+        </ul>
+        <div class="card-body">
+            <a href="#" class="card-link" id="requestid">ทดสอบขอข้อมูลจาก AS</a>
+            <a href="#" class="card-link" id="validateIdToken">ทดสอบ Validate ID token</a>
+            <a href="#" class="card-link" id="revoke">ทดสอบ Revoke Token</a>
+            <a href="/authentication/RefreshToken" class="card-link" id="refresh">ทดสอบ Refresh Token</a>
+        </div>
+    </div>
+    <br></br>
+    <hr />
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">ID Token</h5>
+            <p class="card-text">ID Token ใช้เพื่อยืนยันตัวตน</p>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Access Token Hash: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "at_hash").Value</li>
+            <li class="list-group-item">Audience: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "aud").Value</li>
+            <li class="list-group-item">Version: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "version").Value</li>
+            <li class="list-group-item">Authentication Time: @DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt32(Model.IDTokenJWT.Claims.First(claim => claim.Type == "auth_time").Value)).DateTime.ToLocalTime()</li>
+            <li class="list-group-item">Issuer: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "iss").Value</li>
+            <li class="list-group-item">Issue In: @DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt32(Model.IDTokenJWT.Claims.First(claim => claim.Type == "iat").Value)).DateTime.ToLocalTime() </li>
+            <li class="list-group-item">Expires In: @DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt32(Model.IDTokenJWT.Claims.First(claim => claim.Type == "exp").Value)).DateTime.ToLocalTime()</li>
+            <li class="list-group-item">Subject Identifier: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "sub").Value</li>
+            <li class="list-group-item">PID: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "pid").Value</li>
+            <li class="list-group-item">Name English: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "name_en").Value</li>
+            <li class="list-group-item">Name Thai: @Model.IDTokenJWT.Claims.First(claim => claim.Type == "name").Value</li>
+        </ul>
+    </div>
+</div>
+
+<div class="modal" tabindex="-1" id="myModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modal title</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Active: <span id="active"></span></p>
+                <p>Subject Identifier: <span id="sub"></span></p>
+                <p>Scope: <span id="scope"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var alertPlaceholder = document.getElementById('liveAlertPlaceholder')
+    function alert(message, type) {
+        var wrapper = document.createElement('div')
+        wrapper.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible" role="alert">' + message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
+        alertPlaceholder.append(wrapper)
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var requestButton = document.getElementById('requestid');
+        var revorkButton = document.getElementById('revoke');
+        var validateButton = document.getElementById('validateIdToken');
+
+        requestButton.addEventListener('click', function () {
+            const url = '@Configuration["ThaID:ASEndPoint"]/TokenInspect';
+            const bearerToken = '@Model.AccessToken';
+            const headers = new Headers({
+                'Authorization': `Bearer ${bearerToken}`
+            });
+            fetch(url, {
+                method: 'GET',
+                headers: headers
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(JSON.stringify(data), 'success')
+
+                    console.log(data);
+                })
+                .catch(error => {
+                    alert('There has been a problem with your fetch operation:', 'danger')
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+        });
+
+        revorkButton.addEventListener('click', function () {
+            const url = '@Configuration["ThaID:ASEndPoint"]/TokenRevoke';
+            const bearerToken = '@Model.AccessToken';
+            const headers = new Headers({
+                'Authorization': `${bearerToken}`
+            });
+            fetch(url, {
+                method: 'GET',
+                headers: headers
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(JSON.stringify(data), 'warning')
+                })
+                .catch(error => {
+                    alert('There has been a problem with your fetch operation:', 'danger')
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+        });
+
+        validateButton.addEventListener('click', function () {
+            const url = '/authentication/validateIdToken';
+            fetch(url, {
+                method: 'GET'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(JSON.stringify(data), 'success')
+                })
+                .catch(error => {
+                    alert('There has been a problem with your fetch operation:', 'danger')
+                });
+        });
+    });
+
+</script>

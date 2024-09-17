@@ -1,0 +1,44 @@
+[
+  {
+    "ContainingType": "ThaIDAuthenAPIExample.Controllers.TokenInspectController",
+    "Method": "Get",
+    "RelativePath": "TokenInspect",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "ThaIDAuthenAPIExample.Models.TokenInspect",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ],
+    "EndpointName": "TokenInspect"
+  },
+  {
+    "ContainingType": "ThaIDAuthenAPIExample.Controllers.TokenRevokeController",
+    "Method": "Get",
+    "RelativePath": "TokenRevoke",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "ThaIDAuthenAPIExample.Models.TokenRevoke",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ],
+    "EndpointName": "TokenRevoke"
+  }
+]
