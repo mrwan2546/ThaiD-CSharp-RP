@@ -1,15 +1,34 @@
-# ThaID OAuth2 Integration with .NET
-This project shows how to connect **ThaID** to the **.NET Framework** using **OAuth2 authentication**. It lets you safely log in and give users access through ThaID.
+# 1. คำแนะนำเพื่อใช้งานแอปพลิเคชัน ThaIDAuthenExample เพื่อทดสอบการเชื่อมต่อระบบ ThaID ด้วยภาษา C# ASP.NET 8
 
-The solution contains two projects
-- ThaIDAuthenExample: Used to test the connection to ThaID.
-- ThaIDAuthenAPIExample: Simulates an authorized resource for cross-system API testing.
+แอปพลิเคชันเป็นตัวอย่างเพื่อแสดงวิธีการเชื่อมต่อ **ThaID** โดยใช้ภาษา **C#** ร่วมกับเฟรมเวิร์ก **ASP.NET 8** โดยใช้การยืนยันตัวตนด้วยมาตรฐาน **OpenID Connect & OAuth2**
+
+โซลูชันนี้มีสองโปรเจกต์
+
+- ThaIDAuthenExample: ใช้ทดสอบการเชื่อมต่อกับ ThaID
+- ThaIDAuthenAPIExample: สำหรับจำลองเป็น Authorize Resource เพื่อขอยิง API ข้ามระบบเพื่อทดสอบ
+
+## # 📁 library ในโปรเจกต์
+
+1. **IdentityModel.OidcClient** สำหรับต่อ OAuth2 ของ ThaID
+2. **System.IdentityModel.Tokens.Jwt** สำหรับต่อ Validate id token
+
+## # 📁 Runtime
+
+1. **.NET 8.0 Runtime** (รวมอยู่ในชุดพัฒนาโปรแกรม **Visual Studio Community 2022**)
+
+## # 📁🎛️ การติดตั้ง และตั้งค่าโปรแกรม Visual Studio Community 2022 สำหรับใช้งานแอปพลิเคชัน
+
+1. ดาวน์โหลดโปรแกรม **Visual Studio Installer** สำหรับติดตั้งโปรแกรม **Visual Studio Community 2022** โดยกดที่ [link download](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022&source=VSLandingPage&cid=2030&passive=false)
+2. เปิดโปรแกรม **Visual Studio Installer** ให้เลือกโหลด **Visual Studio Community 2022** และเลือก **ASP.NET and web development** กด **download** และรอจนกว่าการติดตั้งจะเสร็จสมบูรณ์
+3. เปิดโปรแกรม **Visual Studio Community 2022** และเลือก **Open a project or solution**
+4. ค้นหาไฟล์โปรเจกต์ชื่อ `ThaIDAuthenExample.sln` ในโฟลเดอร์ `ThaID\CSharp\ThaIDAuthenExample`
+5. ตั้งค่าสำหรับการเชื่อมต่อ **ThaID** ตามรายละเอียดดังนี้
+
 ---
-## 📁 ThaIDAuthenExample ##
-## # Settings for connecting to ThaID ##
-location: `ThaIDAuthenExample/appsettings.json`
 
-Variables for **configuration** used with **ThaID** data integration, such as **client ID, client secret, APIKey, Callback URL and Scope**.
+location: `ThaIDAuthenExample/appsettings.json`
+แก่ไขค่าในตัวแปรสำหรับการเชื่อมโยงข้อมูล **ThaID** ได้แก่ **client id, client secret, API Key, Callback URL, Scope** ตามตัวอย่างในไฟล์ JSON
+
 ```json
 {
   "ThaID": {
@@ -23,14 +42,25 @@ Variables for **configuration** used with **ThaID** data integration, such as **
     "ASEndPoint": "https://localhost:7228"
   }
 }
-
 ```
+
 ---
-## # Configuring Services for Making API Requests ##
+
+6. เลือกเมนู **Startup Item** (สัญลักษณ์ **ฟันเฟือง**⚙️) และเลือก **ThaIDAuthenExample** สำหรับเปิด Web หรือ **ThaIDAuthenAPIExample** สำหรับเปิด API
+7. กดปุ่ม **https** (สัญลักษณ์ **RUN**▶️ สีเขียว)
+
+<br><br><br>
+
+# 2. องค์ประกอบของแอปพลิเคชันภายในโซลูชัน
+
+## 📁 ThaIDAuthenExample
+
+## # การตั้งค่า **Service** เพื่อการเรียกใช้งาน API
 
 location: `ThaIDAuthenExample/Program.cs`
 
-Add Services for **Managing Sessions**.
+**Services** สำหรับการจัดการ **Session**
+
 ```csharp
 builder.Services.AddSession(options =>
 {
@@ -39,22 +69,30 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true; // Make the session cookie essential
 });
 ```
-Add Services for **Connecting to Data on Another Server** via HTTP API.
+
+**Services** สำหรับ **เชื่อมต่อ** ข้อมูลเครื่อง **Server อื่น** ผ่าน HTTP Rest API ซึ่งในตัวอย่างเป็น Server ThaID
+
 ```csharp
 builder.Services.AddHttpClient("DOPA", httpClient =>
 {
     httpClient.BaseAddress = new Uri("https://imauthsbx.bora.dopa.go.th");
 });
 ```
-Add Services for **Integrating Data with ThaID**.
+
+**Services** สำหรับ **เชื่อมโยง** ข้อมูลกับ **ThaID**
+
 ```csharp
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 ```
+
 ---
-## # Routing and Calling the Authentication Function Connected to ThaID ##
+
+## # การตั้งค่า Route และการเรียกใช้ฟังก์ชันการยืนยันตัวตนที่เชื่อมโยงกับ ThaID
+
 location: `ThaIDAuthenExample/Controllers/HomeController.cs`
 
-Registering with DOPA requires the **Callback URL** to match the Route, ensuring that DOPA can send the **Authorization Code** correctly. You can update this setting in the **RP Admin website**.
+การลงทะเบียน กับ DOPA ค่า **Callback URL** จะต้องตรงกับค่า Route เพื่อให้ DOPA ส่ง **Authorize Code** ได้ถูกต้อง ซึ่งสามารถแก้การตั้งค่าได้ที่เว็บ **RP Admin**
+
 ```csharp
 [Route("/authentication/login-callback")]
 public async Task<IActionResult> Authentication(string code, string state)
@@ -64,14 +102,18 @@ public async Task<IActionResult> Authentication(string code, string state)
     return View("Authentication",tokenResponse);
 }
 ```
-**Function** for the **Home Page** of the web application.
+
+**Function** สำหรับ **หน้าแรก** ของเว็บแอปพลิเคชัน
+
 ```csharp
 public IActionResult Index()
 {
     return View();
 }
 ```
-**Function** for the **authentication process**, which redirects users to the **ThaID website** for verification.
+
+**Function** สำหรับเข้ากระบวนการ **ยืนยันตัวตน** โดยระบบจะพาผู้ใช้ไป **เว็บไซต์ ThaID** เพื่อยืนยันตัวตน
+
 ```csharp
 [Route("/authentication/login")]
 public async Task<IActionResult> login()
@@ -80,7 +122,9 @@ public async Task<IActionResult> login()
     return Redirect(provider.StartUrl);
 }
 ```
-**Function** for after the authentication process, which, upon receiving the **Authorization Code**, makes an **API Request** to obtain a **Token** from ThaID.
+
+**Function** สำหรับหลังจากเข้ากระบวนการยืนยันตัวตนแล้ว และได้รับ **Authorization Code** จะเรียก **API Request Token** เพื่อร้องขอชุด **Token** มาจาก ThaID
+
 ```csharp
 [Route("/authentication/login-callback")]
 public async Task<IActionResult> Authentication(string code, string state)
@@ -90,7 +134,9 @@ public async Task<IActionResult> Authentication(string code, string state)
     return View("Authentication",tokenResponse);
 }
 ```
-**Function** for requesting a **new Token** when the **Access Token** expires or becomes invalid, by calling the **API Refresh Token**.
+
+**Function** สำหรับร้องขอ **Token ชุดใหม่** ในกรณี **Access Token** หมดอายุ หรือใช้งานไม่ได้แล้วโดยเรียกจาก **API Refresh Token**
+
 ```csharp
 [Route("/authentication/RefreshToken")]
 public async Task<IActionResult> RefreshToken()
@@ -109,7 +155,9 @@ public async Task<IActionResult> RefreshToken()
     }
 }
 ```
-**Function** for verifying if the **ThaID ID** received from ThaID complies with **OpenID Connect** standards.
+
+**Function** สำหรับตรวจสอบ **ID Token** ที่ได้รับจาก ThaID ว่าถูกต้องตามมาตรฐาน **OpenID Connect**
+
 ```csharp
 [Route("/authentication/validateIdToken")]
 public async Task<bool> ValidateIdToken()
@@ -136,7 +184,9 @@ public async Task<bool> ValidateIdToken()
 
 }
 ```
-**Function** for creating a **Session** to store the **Token** for the user.
+
+**Function** สำหรับการสร้าง **Session** เพื่อจัดเก็บ **Token** ให้กับผู้ใช้
+
 ```csharp
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 
@@ -145,18 +195,24 @@ public void CreateSessionToken(TokenResponse tokenForSet)
     HttpContext.Session.SetString("token", JsonSerializer.Serialize(tokenForSet));
 }
 ```
-**Function** for sending a response in case of an **Error**.
+
+**Function** สำหรับการส่งข้อมูลกลับในกรณีมี **Error** เกิดขึ้น
+
 ```csharp
 public IActionResult Error()
 {
     return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 }
 ```
+
 ---
-## # Token Model ##
+
+## # Model ของ Token
+
 location: `ThaIDAuthenExample/Models/TokenModel.cs`
 
-**Variables** for storing **Token** values according to **OpenID Connect** standards.
+**ตัวแปร** สำหรับการเก็บค่า **Token** ตามมาตรฐาน **OpenID Connect**
+
 ```csharp
 [JsonPropertyName("access_token")]
 public required string AccessToken { get; set; }
@@ -181,7 +237,9 @@ public JwtSecurityToken IDTokenJWT
     get { return ConvertToJWT(IDToken); }
 }
 ```
-**Function** for converting a **JWT** string into a **JWT Data Object** for use or validation.
+
+**Function** สำหรับการแปลงข้อมูล **JWT** ที่เป็น String เป็น **JWT Data Object** เพื่อนำไปใช้งานหรือตรวจสอบความถูกต้อง
+
 ```csharp
 private JwtSecurityToken ConvertToJWT(string token)
 {
@@ -189,11 +247,15 @@ private JwtSecurityToken ConvertToJWT(string token)
     return handler.ReadJwtToken(token);
 }
 ```
+
 ---
-## # Error Management Model ##
+
+## # Model ของการจัดการ Error
+
 location: `ThaIDAuthenExample/Models/ErrorViewModel.cs`
 
-**Variables** for storing **Error** values.
+**ตัวแปร** สำหรับการเก็บค่า **Error**
+
 ```csharp
 namespace ThaIDAuthenExample.Models
 {
@@ -206,11 +268,15 @@ namespace ThaIDAuthenExample.Models
 }
 
 ```
+
 ---
-## # Authentication Function connected to ThaID ##
+
+## # ฟังก์ชันการยืนยันตัวตนที่เชื่อมโยงกับ ThaID
+
 location: `ThaIDAuthenExample/Services/AuthenticationService.cs`
 
-**Construct Authentication Service** and configure the necessary settings for connecting data to **ThaID**.
+**ตั้งค่าเริ่มต้นของ Authentication Service** และค่าต่าง ๆ ที่จำเป็นต่อการเชื่อมโยงข้อมูลไปยัง **ThaID**
+
 ```csharp
 private readonly IHttpClientFactory _httpClientFactory;
 private readonly IConfiguration _configuration;
@@ -230,7 +296,9 @@ public AuthenticationService(IHttpClientFactory httpClientFactory, IConfiguratio
     _provider = new OidcClient(config);
 }
 ```
-**Function** for starting the authentication process using the **IdentityModel.OidcClient** library.
+
+**Function** สำหรับเริ่มกระบวนการยินยันตัวตนด้วย Library **IdentityModel.OidcClient**
+
 ```csharp
 public async Task<AuthorizeState> CreateProvider()
 {
@@ -238,7 +306,9 @@ public async Task<AuthorizeState> CreateProvider()
     return configProvider;
 }
 ```
-**Function** for requesting a **Token** set after the **authentication process** with ThaID.
+
+**Function** สำหรับการร้องขอชุด **Token** หลังจากกระบวนการ **ยืนยันตัวตน** ของ ThaID
+
 ```csharp
 public async Task<TokenResponse> RequestTokenAsync(string code, string state)
 {
@@ -254,7 +324,9 @@ public async Task<TokenResponse> RequestTokenAsync(string code, string state)
     return tokenResponse;
 }
 ```
-**Function** for initiating the **authentication process**.
+
+**Function** สำหรับเริ่มกระบวนการ **ยืนยันตัวตน**
+
 ```csharp
 public async Task<bool> ValidateIdToken(string keyForValidate, string idToken)
 {
@@ -289,41 +361,49 @@ public async Task<bool> ValidateIdToken(string keyForValidate, string idToken)
     }
 }
 ```
+
 ---
-## 📁 ThaIDAuthenAPIExample ##
-## # Settings for connecting to ThaID ##
+
+## 📁 ThaIDAuthenAPIExample
+
+## # การตั้งค่าเพื่อเชื่อมโยง ThaID
+
 location: `ThaIDAuthenAPIExample/appsettings.json`
 
-Variables for **configuration** used with **ThaID** data integration, such as **client ID, client secret, scope**.
+**ตัวแปร** สำหรับการ **ตั้งค่า** ที่ใช้กับการเชื่อมโยงข้อมูล **ThaID** เช่น **client id, client secret, API Key** เป็นต้น
+
 ```json
 {
-  "ThaID": 
-  {
+  "ThaID": {
     "ClientID": "{Client ID from DOPA}",
     "ClientSecret": "{Client Secret from DOPA}",
     "APIKey": "{API Key from DOPA}"
   }
 }
 ```
+
 ---
-## # Configuring Services for Making API Requests ##
+
+## # การตั้งค่า Service ที่ใช้ในการเรียกใช้งาน API
 
 location: `ThaIDAuthenAPIExample/Program.cs`
 
-Add Services for **Connecting to Data on Another Server** via HTTP API.
+เพิ่ม Services ในการ **เชื่อมต่อข้อมูลเครื่อง Server** อื่นผ่าน HTTP API
+
 ```csharp
 builder.Services.AddHttpClient("DOPA", httpClient =>
 {
     httpClient.BaseAddress = new Uri("https://imauth.bora.dopa.go.th");
 });
 ```
+
 ---
-## # Routing and invoking the authentication function connected to ThaID ##
+
+## # การ Route และการเรียกใช้ฟังก์ชันการยืนยันตัวตนที่เชื่อมโยงกับ ThaID
 
 location: `ThaIDAuthenAPIExample/Controllers/TokenInspectController.cs`
 
-
-**Configure the Route** for the **TokenInspect** function to let **ThaIDAuthenExample** test its **availability** using the **API Introspect Token** for **Authorize Resources** from other systems using **ThaID**.
+**การตั้งค่า Route** สำหรับ Function **TokenInspect** เพื่อให้ **ThaIDAuthenExample** ทดสอบว่ายัง **ใช้งานได้หรือไม่** ซึ่งใช้ **API Introspect Token** ในกรณีที่เป็น **Authorize Resource** และได้รับคำร้องขอข้อมูลมาจากระบบอื่นที่ใช้งาน **ThaID**
 
 ```csharp
 [HttpGet(Name = "TokenInspect")]
@@ -332,11 +412,15 @@ public async Task<TokenInspect> Get()
     return await _authenticationService.TokenIntroSpectAsync(Request.Headers.Authorization);
 }
 ```
+
 ---
-## # Routing and calling the authentication function linked to ThaID ##
+
+## # การ Route และการเรียกใช้ฟังก์ชันการยกเลิกการใช้งาน Access Token
+
 location: `ThaIDAuthenAPIExample/Controllers/TokenRevokeController.cs`
 
-**Setting up the Route for the Function TokenRevoke** to allow **ThaIDAuthenExample** to test revoking the **Access Token**.
+**การตั้งค่า Route สำหรับ Function TokeRevoke** เพื่อให้ **ThaIDAuthenExample** ทดสอบยกเลิกการใช้งาน **Access Token**
+
 ```csharp
 [HttpGet(Name = "TokenRevoke")]
 public async Task<TokenRevoke> Get()
@@ -344,12 +428,15 @@ public async Task<TokenRevoke> Get()
     return await _authenticationService.TokenRevokeAsync(Request.Headers.Authorization);
 }
 ```
+
 ---
-## # Token Model ##
+
+## # Model ของ Token
 
 location: `ThaIDAuthenAPIExample/Models/TokenModel.cs`
 
-**Variable** for **storing** values received from the **API Inspect Token**.
+**ตัวแปร** สำหรับการ **เก็บค่า** ที่ส่งมาจาก **API Inspect Token**
+
 ```csharp
 public class TokenInspect
 {
@@ -363,7 +450,9 @@ public class TokenInspect
     public string? Scope { get; set; }
 }
 ```
-**Variable** for **storing** values received from the **API Revoke Token**.
+
+**ตัวแปร** สำหรับการ **เก็บค่า** ที่ส่งมาจาก **API Revoke Token**
+
 ```csharp
 public class TokenRevoke
 {
@@ -371,11 +460,15 @@ public class TokenRevoke
     public required string Message { get; set; }
 }
 ```
+
 ---
-## # Authentication Function connected to ThaID ##
+
+## # ฟังก์ชันการยืนยันตัวตนที่เชื่อมโยงกับ ThaID
+
 location: `ThaIDAuthenAPIExample/Services/AuthenticationService.cs`
 
-**Construct Authentication Service** and set up the necessary configurations for **connecting data to ThaID**.
+**การตั้งค่าเริ่มต้น Authentication Service** และค่าต่าง ๆ ที่จำเป็นต่อ **การเชื่อมโยงข้อมูลไปยัง ThaID**
+
 ```csharp
 private readonly IHttpClientFactory _httpClientFactory;
 private readonly IConfiguration _configuration;
@@ -385,7 +478,9 @@ public AuthenticationService(IHttpClientFactory httpClientFactory, IConfiguratio
     _configuration = configuration;
 }
 ```
-**Function** to initiate the **authentication process** using the **IdentityModel.OidcClient** library.
+
+**Function** สำหรับเริ่มกระบวนการ **ยืนยันตัวตน** ด้วย Library **IdentityModel.OidcClient**
+
 ```csharp
 public async Task<TokenInspect> TokenIntroSpectAsync(string token)
 {
@@ -410,7 +505,9 @@ public async Task<TokenInspect> TokenIntroSpectAsync(string token)
     return tokenResponse;
 }
 ```
-**Function** to request the **revocation** of an **Access Token** by calling the **API Revoke Token**.
+
+**Function** สำหรับร้องขอ **เพิกถอน Access Token** โดยเรียกจาก **API Revoke Token**
+
 ```csharp
 public async Task<TokenRevoke> TokenRevokeAsync(string token)
 {
@@ -435,7 +532,9 @@ public async Task<TokenRevoke> TokenRevokeAsync(string token)
     return tokenResponse;
 }
 ```
-**Function** to **generat**e an **Authorization Key** for linking data with **ThaID**.
+
+**Function** สำหรับการ **สร้าง Authorization Key** เพื่อใช้ในการเชื่อมโยงข้อมูลกับ **ThaID**
+
 ```csharp
 private string ClientAuthen(string clientID, string clientSecret)
 {
